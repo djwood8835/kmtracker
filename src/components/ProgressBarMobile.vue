@@ -1,5 +1,5 @@
 <template>
-    <div id="progressBarM" :style="{'width': `${this.width}%`, 'background-color': this.bgColor, 'color': this.bgColor}">
+    <div class="progressBarM" :style="{'width': `${this.width}%`, 'background-color': this.bgColor, 'color': this.bgColor}">
         <span class="is-size-2 placeLabel">{{rowData.place}}</span>
         <span :style="{'color': this.textColor}" class="rightLabel">
             <p v-if="rowData.username !== undefined" v-html="rowData.username"></p>
@@ -65,7 +65,7 @@ export default {
 </script>
 
 <style>
-    #progressBarM {
+    .progressBarM {
         min-width:200px;
         display:block;
         width: 0px;

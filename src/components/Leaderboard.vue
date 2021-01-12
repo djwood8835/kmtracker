@@ -1,51 +1,61 @@
 <template>
     <div>
         <b-loading :is-full-page="$mq==='mobile'" :active.sync="isLoading"></b-loading>
-        <div id="leaderboardSettings" v-if="header">
-            <b-field grouped group-multiline v-if="!groupStandingsMode">
-                <b-field label="Filter By Group:">
-                    <b-select id="group-filter" v-model="selectedGroup">
-                        <option value='All'>All</option>
-                        <option v-for="(group,i) in groupList" :value="group.abbr" :key="i">{{group.name}}</option>
-                    </b-select>
+        <b-collapse v-if="header" class="filters-card mb-2 mt-2" animation="slide" v-model="showFilters">
+            <template #trigger="props">
+                <div class="card-header" role="button">
+                    <p class="card-header-title">Filters</p>
+                    <a class="card-header-icon">
+                        <b-icon :icon="props.open ? 'chevron-up' : 'chevron-down'" />
+                    </a>
+                </div>
+            </template>
+            <div class="card-content">
+                <b-field grouped group-multiline v-if="!groupStandingsMode">
+                    <b-field label="Filter By Group:">
+                        <b-select id="group-filter" v-model="selectedGroup">
+                            <option value='All'>All</option>
+                            <option v-for="(group,i) in groupList" :value="group.abbr" :key="i">{{group.name}}</option>
+                        </b-select>
+                    </b-field>
+
+                    <b-field id="start-date-field" label="Start Date:">
+                        <b-datepicker id="start-date" icon="calendar" v-model="startDate" :disabled="dateMode==='lifetime' || dateMode === 'allSeasons'"></b-datepicker>
+                    </b-field>
+
+                    <b-field id="end-date-field" label="End Date:">
+                        <b-datepicker id="end-date" icon="calendar" v-model="endDate" :disabled="dateMode==='lifetime' || dateMode === 'allSeasons'"></b-datepicker>
+                        <b-button id="go-button" type="is-primary" :disabled="!dateChanged" @click="customDates()">
+                            <span class="icon is-small">
+                                <i class="fas fa-chevron-right"></i>
+                            </span>
+                        </b-button>
+                    </b-field>                  
+
                 </b-field>
 
-                <b-field id="start-date-field" label="Start Date:">
-                    <b-datepicker id="start-date" icon="calendar" v-model="startDate" :disabled="dateMode==='lifetime' || dateMode === 'allSeasons'"></b-datepicker>
-                </b-field>
+                <br/>
 
-                <b-field id="end-date-field" label="End Date:">
-                    <b-datepicker id="end-date" icon="calendar" v-model="endDate" :disabled="dateMode==='lifetime' || dateMode === 'allSeasons'"></b-datepicker>
-                    <b-button id="go-button" type="is-primary" :disabled="!dateChanged" @click="customDates()">
+                <div class="buttons">
+                    <div class="button is-primary" :class="{'is-outlined': dateMode!=='thisSeason'}" v-if="!groupStandingsMode" @click="regStandings()">This Season</div>
+                    <div class="button is-primary" :class="{'is-outlined': dateMode!=='thisWeek'}" v-if="!groupStandingsMode" @click="thisWeek()">This Week</div>
+                    <div class="button is-primary" :class="{'is-outlined': dateMode!=='lifetime'}" v-if="!groupStandingsMode" @click="lifetime()">Lifetime</div>
+                    <div class="button is-primary" :class="{'is-outlined': dateMode!=='allSeasons'}" v-if="!groupStandingsMode" @click="allSeasons()">All Seasons</div>
+                    <div class="button is-primary" @click="groupStandings()" v-if="!groupStandingsMode">
+                        <span>Group Standings</span>
                         <span class="icon is-small">
                             <i class="fas fa-chevron-right"></i>
                         </span>
-                    </b-button>
-                </b-field>                  
-
-            </b-field>
-
-            <br/>
-
-            <div class="buttons">
-                <div class="button is-primary" :class="{'is-outlined': dateMode!=='thisSeason'}" v-if="!groupStandingsMode" @click="regStandings()">This Season</div>
-                <div class="button is-primary" :class="{'is-outlined': dateMode!=='thisWeek'}" v-if="!groupStandingsMode" @click="thisWeek()">This Week</div>
-                <div class="button is-primary" :class="{'is-outlined': dateMode!=='lifetime'}" v-if="!groupStandingsMode" @click="lifetime()">Lifetime</div>
-                <div class="button is-primary" :class="{'is-outlined': dateMode!=='allSeasons'}" v-if="!groupStandingsMode" @click="allSeasons()">All Seasons</div>
-                <div class="button is-primary" @click="groupStandings()" v-if="!groupStandingsMode">
-                    <span>Group Standings</span>
-                    <span class="icon is-small">
-                        <i class="fas fa-chevron-right"></i>
-                    </span>
-                </div>
-                <div class="button is-primary" @click="regStandings()" v-if="groupStandingsMode">
-                    <span class="icon is-small">
-                        <i class="fas fa-chevron-left"></i>
-                    </span>
-                    <span>Individual Standings</span>
+                    </div>
+                    <div class="button is-primary" @click="regStandings()" v-if="groupStandingsMode">
+                        <span class="icon is-small">
+                            <i class="fas fa-chevron-left"></i>
+                        </span>
+                        <span>Individual Standings</span>
+                    </div>
                 </div>
             </div>
-        </div>
+        </b-collapse>
 
         <div class="content p-3 has-text-centered" v-if="!header">
             <b-button type="is-primary" icon-right="chevron-right" @click="openInNewTab()">KMTracker.org</b-button>
@@ -81,7 +91,7 @@
                 </template>
             </b-table>
 
-            <div v-if="$mq==='mobile'">
+            <div class="mobile-leaderboard" v-if="$mq==='mobile'">
                 <progress-bar-mobile v-for="(row, i) in filteredList" :key="i" :rowData="row" :max="filteredList[0].kms"></progress-bar-mobile>
             </div>
         </div>
@@ -111,7 +121,8 @@ export default {
             total: 0,
             groupStandingsMode: false,
             isLoading: true,
-            dateChanged: false
+            dateChanged: false,
+            showFilters: true
         }
     },
 
@@ -127,6 +138,7 @@ export default {
 
     mounted() {
         this.regStandings();
+        if (this.$mq === 'mobile') this.showFilters = false;
     },
 
     watch: {
@@ -203,7 +215,7 @@ export default {
                 this.dateMode = 'thisWeek';
             }).catch(error => {
                 this.isLoading = false;
-                this.$root.$emit('handle-error', error, 'Error loading this week\'s leaderboard');
+                this.$root.$emit('handle-error', error, 'Error loading leaderboard');
             });
         },
 
@@ -232,7 +244,7 @@ export default {
                 this.dateMode = 'lifetime';
             }).catch(error => {
                 this.isLoading = false;
-                this.$root.$emit('handle-error', error, 'Error loading lifetime leaderboard');
+                this.$root.$emit('handle-error', error, 'Error loading leaderboard');
             });
         },
 
@@ -245,7 +257,7 @@ export default {
                 this.dateMode = 'allSeasons';
             }).catch(error => {
                 this.isLoading = false;
-                this.$root.$emit('handle-error', error, 'Error loading all seasons leaderboard');
+                this.$root.$emit('handle-error', error, 'Error loading leaderboard');
             });
         },
 
@@ -257,11 +269,7 @@ export default {
 </script>
 
 <style>
-    #leaderboardSettings {
-        display:block;
-        margin-top:10px;
+    .filters-card {
         border-bottom:2px solid #0249C1;
-        margin-bottom:10px;
-        padding:10px;
     }
 </style>

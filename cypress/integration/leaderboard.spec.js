@@ -234,6 +234,16 @@ describe('Leaderboard page', () => {
             cy.get('.toast.is-danger').contains('Error loading leaderboard').should('be.visible');
         });
 
+        it('shows message if there is a weekly leaderboard server error', () => {
+            cy.route({ method: 'GET', url: '/leaderboard/2020-12-25/2021-01-01', status: 500, response: '' }).as('getWeeklyLeaderboard');
+            cy.visit('/#/leaderboard');
+            cy.wait('@getLeaderboard');
+            cy.get('.toast.is-danger').should('not.exist');
+            cy.get('.button').contains('This Week').click();
+            cy.wait('@getWeeklyLeaderboard');
+            cy.get('.toast.is-danger').contains('Error loading leaderboard').should('be.visible');
+        });
+
         it('shows message if there is a lifetime leaderboard server error', () => {
             cy.route({ method: 'GET', url: '/leaderboard/lifetime', status: 500, response: '' }).as('getLifetimeLeaderboard');
             cy.visit('/#/leaderboard');
@@ -262,6 +272,46 @@ describe('Leaderboard page', () => {
             cy.get('.button').contains('Group Standings').click();
             cy.wait('@getGroupStandings');
             cy.get('.toast.is-danger').contains('Error loading group standings').should('be.visible');
+        });
+    });
+
+    describe('mobile tests', () => {
+        beforeEach(() => {
+            cy.viewport('iphone-6');
+        });
+
+        it('loads leaderboard on mobile', () => {
+            cy.visit('/#/leaderboard');
+            cy.wait('@getLeaderboard');
+            cy.get('.button').contains('KMTracker.org').should('not.exist');
+            cy.get('.mobile-leaderboard').find('.progressBarM').should('have.length', 3);
+
+            cy.get('.progressBarM').eq(0).should('have.attr', 'style').and('include', 'width: 100%');
+            cy.get('.progressBarM').eq(0).within(() => {
+                cy.get('.placeLabel').should('contain', '1');
+                cy.get('.rightLabel p').eq(0).should('contain', 'person 1');
+                cy.get('.rightLabel p').eq(1).should('contain', '25 km');
+            });
+
+            cy.get('.progressBarM').eq(1).should('have.attr', 'style').and('include', 'width: 60%');
+            cy.get('.progressBarM').eq(1).within(() => {
+                cy.get('.placeLabel').should('contain', '2');
+                cy.get('.rightLabel p').eq(0).should('contain', 'person 2');
+                cy.get('.rightLabel p').eq(1).should('contain', '15 km');
+            });
+
+            cy.get('.progressBarM').eq(2).should('have.attr', 'style').and('include', 'width: 40%');
+            cy.get('.progressBarM').eq(2).within(() => {
+                cy.get('.placeLabel').should('contain', '3');
+                cy.get('.rightLabel p').eq(0).should('contain', 'person 3');
+                cy.get('.rightLabel p').eq(1).should('contain', '10 km');
+            });
+        });
+
+        it('hides filters by default', () => {
+            cy.visit('/#/leaderboard');
+            cy.wait('@getLeaderboard');
+            cy.get('.filters-card .collapse-content').should('not.be.visible');
         });
     });
 });
