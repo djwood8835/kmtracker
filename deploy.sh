@@ -4,6 +4,7 @@ set -e
 
 npx cypress run -b chrome --headless
 npm run build
+ssh djwood@kmtracker 'rm -r /var/www/html/kmtracker/dist/'
 scp -r ./dist djwood@kmtracker:/var/www/html/kmtracker
 scp -r ./api/classes djwood@kmtracker:/var/www/html/kmtracker/api
 scp -r ./api/public djwood@kmtracker:/var/www/html/kmtracker/api

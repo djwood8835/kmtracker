@@ -49,6 +49,7 @@
 
 <script>
 
+import currentVersionJson from './assets/version.json';
 export default {
   name: 'app',
   components: {
@@ -100,6 +101,7 @@ export default {
   },
 
   mounted() {
+    this.checkForUpdates();
     this.$root.$on('showLoginBox', () => {
         this.loginModal = true;
     });
@@ -144,6 +146,15 @@ export default {
         deviceWidth: screen.width,
         deviceHeight: screen.height
       });
+    },
+
+    checkForUpdates() {
+      if (this.$env === 'production') {
+        const version = localStorage.getItem('version');
+        const currentVersion = currentVersionJson.currentVersion;
+        localStorage.setItem('version', currentVersion);
+        if (version !== currentVersion) window.location.reload();
+      }
     }
   }
 }
