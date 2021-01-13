@@ -123,20 +123,26 @@ describe('Leaderboard page', () => {
     it('dates fields are disabled when lifetime/all seasons selected', () => {
         cy.route('GET', '/leaderboard/lifetime', {}).as('getLifetimeLeaderboard');
         cy.route('GET', '/leaderboard/allSeasons', {}).as('getAllSeasonsLeaderboard');
+        cy.route('GET', '/leaderboard/2020-12-25/2021-01-01', {}).as('getWeeklyLeaderboard');
         cy.visit('/#/leaderboard');
         cy.wait('@getLeaderboard');
         cy.get('#start-date').should('not.be.disabled');
         cy.get('#end-date').should('not.be.disabled');
 
         cy.get('.button').contains('This Week').click();
+        cy.wait('@getWeeklyLeaderboard')
         cy.get('#start-date').should('not.be.disabled');
         cy.get('#end-date').should('not.be.disabled');
 
         cy.get('.button').contains('Lifetime').click();
+        cy.wait('@getLifetimeLeaderboard');
+        cy.wait(500);
         cy.get('#start-date').should('be.disabled');
         cy.get('#end-date').should('be.disabled');
 
         cy.get('.button').contains('All Seasons').click();
+        cy.wait('@getAllSeasonsLeaderboard');
+        cy.wait(500);
         cy.get('#start-date').should('be.disabled');
         cy.get('#end-date').should('be.disabled');
     });
